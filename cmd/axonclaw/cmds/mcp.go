@@ -10,7 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/looplj/axonhub/cmd/axonclaw/conf"
+	"github.com/looplj/axonhub/cmd/axonclaw/mcp"
 )
 
 func NewMCPCommand(opts StdioOptions) *cobra.Command {
@@ -28,7 +28,7 @@ func NewMCPCommand(opts StdioOptions) *cobra.Command {
 		Long: `Manage MCP servers in dedicated JSON config.
 
 MCP config file:
-  .axonclaw/mcp_servers.json`,
+  ` + mcp.ConfigPath(),
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
@@ -50,7 +50,7 @@ func newConfMCPPathCmd(out *os.File) *cobra.Command {
 		Short: "Show MCP config file path",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Fprintln(out, conf.MCPPath())
+			fmt.Fprintln(out, mcp.ConfigPath())
 			return nil
 		},
 	}
@@ -62,7 +62,7 @@ func newConfMCPListCmd(out *os.File) *cobra.Command {
 		Short: "List MCP servers",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			servers, err := conf.LoadMCPServers()
+			servers, err := mcp.LoadServers()
 			if err != nil {
 				return err
 			}
@@ -94,7 +94,7 @@ func newConfMCPGetCmd(out *os.File) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			name := strings.TrimSpace(args[0])
-			servers, err := conf.LoadMCPServers()
+			servers, err := mcp.LoadServers()
 			if err != nil {
 				return err
 			}
@@ -152,7 +152,7 @@ Examples:
 				return fmt.Errorf("name is required")
 			}
 
-			servers, err := conf.LoadMCPServers()
+			servers, err := mcp.LoadServers()
 			if err != nil {
 				return err
 			}
@@ -222,11 +222,11 @@ Examples:
 			}
 
 			servers[name] = current
-			if err := conf.SaveMCPServers(servers); err != nil {
+			if err := mcp.SaveServers(servers); err != nil {
 				return err
 			}
 
-			fmt.Fprintf(errOut, "config\t%s\n", conf.MCPPath())
+			fmt.Fprintf(errOut, "config\t%s\n", mcp.ConfigPath())
 			fmt.Fprintf(out, "mcp_server\t%s\n", name)
 			return nil
 		},
@@ -252,7 +252,7 @@ func newConfMCPDeleteCmd(out *os.File, errOut *os.File) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			name := strings.TrimSpace(args[0])
-			servers, err := conf.LoadMCPServers()
+			servers, err := mcp.LoadServers()
 			if err != nil {
 				return err
 			}
@@ -261,11 +261,11 @@ func newConfMCPDeleteCmd(out *os.File, errOut *os.File) *cobra.Command {
 			}
 
 			delete(servers, name)
-			if err := conf.SaveMCPServers(servers); err != nil {
+			if err := mcp.SaveServers(servers); err != nil {
 				return err
 			}
 
-			fmt.Fprintf(errOut, "config\t%s\n", conf.MCPPath())
+			fmt.Fprintf(errOut, "config\t%s\n", mcp.ConfigPath())
 			fmt.Fprintf(out, "mcp_server deleted\t%s\n", name)
 			return nil
 		},
@@ -286,7 +286,7 @@ func newConfMCPEnableCmd(out *os.File, errOut *os.File, enabled bool) *cobra.Com
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			name := strings.TrimSpace(args[0])
-			servers, err := conf.LoadMCPServers()
+			servers, err := mcp.LoadServers()
 			if err != nil {
 				return err
 			}
@@ -297,10 +297,10 @@ func newConfMCPEnableCmd(out *os.File, errOut *os.File, enabled bool) *cobra.Com
 			s.Enabled = &enabled
 			servers[name] = s
 
-			if err := conf.SaveMCPServers(servers); err != nil {
+			if err := mcp.SaveServers(servers); err != nil {
 				return err
 			}
-			fmt.Fprintf(errOut, "config\t%s\n", conf.MCPPath())
+			fmt.Fprintf(errOut, "config\t%s\n", mcp.ConfigPath())
 			fmt.Fprintf(out, "mcp_server %s\t%s\n", use, name)
 			return nil
 		},

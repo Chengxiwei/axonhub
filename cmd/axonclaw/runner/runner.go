@@ -20,6 +20,7 @@ import (
 
 	"github.com/looplj/axonhub/cmd/axonclaw/bootstrap"
 	"github.com/looplj/axonhub/cmd/axonclaw/conf"
+	"github.com/looplj/axonhub/cmd/axonclaw/mcp"
 )
 
 const defaultMaxIterations = 30
@@ -36,7 +37,7 @@ type Runner struct {
 	TaskScheduler *task.Scheduler
 	processMu     sync.Mutex
 	processing    atomic.Bool
-	mcpRuntime    *mcpRuntime
+	mcpManager    *mcp.Manager
 }
 
 type NewOptions struct {
@@ -70,7 +71,7 @@ func New(opts NewOptions) *Runner {
 		agent.WithMiddlewares(permMw),
 	)
 
-	mcpRuntime := registerTools(a, opts.Workspace, opts.Boot, opts.Logger, opts.Client)
+	mcpMgr := registerTools(a, opts.Workspace, opts.Boot, opts.Logger, opts.Client)
 
 	return &Runner{
 		Client:        opts.Client,
@@ -81,7 +82,7 @@ func New(opts NewOptions) *Runner {
 		ThreadID:      opts.Boot.ThreadID,
 		Boot:          opts.Boot,
 		TaskScheduler: opts.TaskScheduler,
-		mcpRuntime:    mcpRuntime,
+		mcpManager:    mcpMgr,
 	}
 }
 
@@ -309,8 +310,8 @@ func (r *Runner) SetTaskScheduler(s *task.Scheduler) {
 }
 
 func (r *Runner) Close() error {
-	if r.mcpRuntime == nil {
+	if r.mcpManager == nil {
 		return nil
 	}
-	return r.mcpRuntime.Close()
+	return r.mcpManager.Close()
 }

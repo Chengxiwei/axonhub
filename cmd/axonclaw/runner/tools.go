@@ -14,6 +14,7 @@ import (
 	"github.com/looplj/axonhub/axon/pkg/search"
 	"github.com/looplj/axonhub/axon/tools"
 	"github.com/looplj/axonhub/cmd/axonclaw/bootstrap"
+	"github.com/looplj/axonhub/cmd/axonclaw/mcp"
 )
 
 func registerTools(
@@ -22,7 +23,7 @@ func registerTools(
 	boot *bootstrap.Result,
 	logger *slog.Logger,
 	client graphql.Client,
-) *mcpRuntime {
+) *mcp.Manager {
 	enabledBuiltin := map[string]bool{}
 	for _, t := range boot.BuiltinTools {
 		if t.Name == "" {
@@ -101,7 +102,9 @@ func registerTools(
 		known[t.Name] = struct{}{}
 	}
 
-	return registerMCPTools(a, threadWorkspace, logger, known)
+	mgr := mcp.NewManager(logger)
+	mgr.RegisterTools(a, threadWorkspace, known)
+	return mgr
 }
 
 type unimplementedTool struct {

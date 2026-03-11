@@ -33,6 +33,20 @@ type Config struct {
 	Debug                  bool          `yml:"debug"`
 }
 
+type MCPServerConfig struct {
+	Enabled        *bool
+	Command        string
+	Args           []string
+	Env            map[string]string
+	ToolPrefix     string
+	RequestTimeout time.Duration
+	ConnectTimeout time.Duration
+}
+
+func (c MCPServerConfig) IsEnabled() bool {
+	return c.Enabled == nil || *c.Enabled
+}
+
 func DefaultConfig() Config {
 	return Config{
 		PollInterval:           5 * time.Second,

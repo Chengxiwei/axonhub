@@ -36,6 +36,7 @@ type Runner struct {
 	TaskScheduler *task.Scheduler
 	processMu     sync.Mutex
 	processing    atomic.Bool
+	mcpRuntime    *mcpRuntime
 }
 
 type NewOptions struct {
@@ -69,7 +70,7 @@ func New(opts NewOptions) *Runner {
 		agent.WithMiddlewares(permMw),
 	)
 
-	registerTools(a, opts.Workspace, opts.Boot, opts.Logger, opts.Client)
+	mcpRuntime := registerTools(a, opts.Workspace, opts.Boot, opts.Logger, opts.Client)
 
 	return &Runner{
 		Client:        opts.Client,
@@ -80,6 +81,7 @@ func New(opts NewOptions) *Runner {
 		ThreadID:      opts.Boot.ThreadID,
 		Boot:          opts.Boot,
 		TaskScheduler: opts.TaskScheduler,
+		mcpRuntime:    mcpRuntime,
 	}
 }
 
@@ -304,4 +306,11 @@ func (r *Runner) ProcessScheduledMessage(ctx context.Context, text string) error
 
 func (r *Runner) SetTaskScheduler(s *task.Scheduler) {
 	r.TaskScheduler = s
+}
+
+func (r *Runner) Close() error {
+	if r.mcpRuntime == nil {
+		return nil
+	}
+	return r.mcpRuntime.Close()
 }

@@ -22,7 +22,7 @@ func registerTools(
 	boot *bootstrap.Result,
 	logger *slog.Logger,
 	client graphql.Client,
-) {
+) *mcpRuntime {
 	enabledBuiltin := map[string]bool{}
 	for _, t := range boot.BuiltinTools {
 		if t.Name == "" {
@@ -81,6 +81,9 @@ func registerTools(
 	for name := range enabledBuiltin {
 		known[name] = struct{}{}
 	}
+	known["SendMessage"] = struct{}{}
+	known["AxonClawHelp"] = struct{}{}
+	known["Reset"] = struct{}{}
 	for _, t := range boot.Tools {
 		if t.Name == "" {
 			continue
@@ -95,7 +98,10 @@ func registerTools(
 			continue
 		}
 		a.RegisterTool(&unimplementedTool{def: def})
+		known[t.Name] = struct{}{}
 	}
+
+	return registerMCPTools(a, threadWorkspace, logger, known)
 }
 
 type unimplementedTool struct {
